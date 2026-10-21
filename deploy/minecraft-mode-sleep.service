@@ -1,0 +1,17 @@
+[Unit]
+Description=MinecraftModeSleep guarded backend lifecycle
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0027
+ExecStart=/usr/bin/python3 /usr/local/lib/minecraft-mode-sleep/modesleep.py --config /etc/minecraft-mode-sleep/config.json --apply tick
+TimeoutStartSec=240
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=true
+PrivateTmp=true
+PrivateNetwork=false
+CapabilityBoundingSet=CAP_NET_ADMIN
+RestrictAddressFamilies=AF_UNIX AF_INET AF_NETLINK

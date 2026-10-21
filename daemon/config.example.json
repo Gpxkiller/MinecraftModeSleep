@@ -1,0 +1,11 @@
+{
+  "enabled": false,
+  "ipcRoot": "/var/lib/minecraft-mode-sleep",
+  "idleSeconds": 86400,
+  "protectedPorts": [25565, 25566],
+  "protectedUnits": ["minecraft-lobby.service", "velocity.service"],
+  "modes": [
+    {"id": "survival", "unit": "minecraft-survival.service", "port": 25601},
+    {"id": "arena", "unit": "minecraft-arena.service", "port": 25602, "idleSeconds": 86400}
+  ]
+}

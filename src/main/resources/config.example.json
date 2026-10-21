@@ -1,0 +1,6 @@
+{
+  "enabled": false,
+  "ipcRoot": "/var/lib/minecraft-mode-sleep",
+  "lobby": "lobby",
+  "modes": {"survival": "survival", "arena": "arena"}
+}

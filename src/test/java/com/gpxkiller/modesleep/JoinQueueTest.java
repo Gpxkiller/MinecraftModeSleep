@@ -1,0 +1,16 @@
+package com.gpxkiller.modesleep;
+import org.junit.jupiter.api.Test;
+import java.util.*;
+import static org.junit.jupiter.api.Assertions.*;
+class JoinQueueTest {
+ @Test void multiplePlayersWaitIndependently(){var q=new JoinQueue();Object a=new Object(),b=new Object();var x=q.begin(UUID.randomUUID(),a,"lobby","arena",0);var y=q.begin(UUID.randomUUID(),b,"lobby","arena",0);assertEquals(2,q.size());assertTrue(q.current(x,a,"lobby",1));assertTrue(q.current(y,b,"lobby",1));}
+ @Test void reconnectSameUuidInvalidatesOldSession(){var q=new JoinQueue();var id=UUID.randomUUID();Object old=new Object(),next=new Object();var a=q.begin(id,old,"lobby","arena",0);var b=q.begin(id,next,"lobby","arena",1);assertFalse(q.current(a,old,"lobby",2));assertFalse(q.remove(a));assertTrue(q.current(b,next,"lobby",2));}
+ @Test void switchingSourceOrTargetCancelsOldTransfer(){var q=new JoinQueue();var id=UUID.randomUUID();Object session=new Object();var a=q.begin(id,session,"lobby","arena",0);assertFalse(q.current(a,session,"survival",1));var b=q.begin(id,session,"lobby","survival",2);assertFalse(q.remove(a));assertTrue(q.current(b,session,"lobby",3));}
+ @Test void timeoutIsMonotonicAndBounded(){var q=new JoinQueue();Object s=new Object();var a=q.begin(UUID.randomUUID(),s,"lobby","arena",10);assertFalse(q.current(a,s,"lobby",180_000_000_010L));}
+ @Test void monotonicSignedClockWrapDoesNotExpireANewTicket(){var q=new JoinQueue();Object s=new Object();long now=Long.MAX_VALUE-100;var a=q.begin(UUID.randomUUID(),s,"lobby","arena",now);assertTrue(q.current(a,s,"lobby",now+1));assertFalse(q.current(a,s,"lobby",now+180_000_000_000L));}
+ @Test void cancelAndClearRemoveTickets(){var q=new JoinQueue();var id=UUID.randomUUID();q.begin(id,new Object(),"lobby","arena",0);q.cancel(id);assertEquals(0,q.size());q.begin(id,new Object(),"lobby","arena",1);q.clear();assertEquals(0,q.size());}
+ @Test void saturationDoesNotEvictExistingPlayers(){var q=new JoinQueue();for(int i=0;i<1000;i++)q.begin(UUID.randomUUID(),new Object(),"lobby","arena",0);assertThrows(IllegalStateException.class,()->q.begin(UUID.randomUUID(),new Object(),"lobby","arena",0));assertEquals(1000,q.size());}
+ @Test void aCompletedTicketCannotTransferTwice(){var q=new JoinQueue();var a=q.begin(UUID.randomUUID(),new Object(),"lobby","arena",0);assertTrue(q.remove(a));assertFalse(q.remove(a));}
+ @Test void dispatchCannotRunTwice(){var q=new JoinQueue();var a=q.begin(UUID.randomUUID(),new Object(),"lobby","arena",0);assertTrue(q.dispatch(a));assertFalse(q.dispatch(a));}
+ @Test void lateDispatchCannotCancelNewChoice(){var q=new JoinQueue();var id=UUID.randomUUID();Object s=new Object();var old=q.begin(id,s,"lobby","arena",0);q.dispatch(old);var next=q.begin(id,s,"lobby","survival",1);assertSame(old,q.dispatched(id,"arena"));assertFalse(q.current(old,s,"lobby",2));q.finished(old);assertTrue(q.current(next,s,"lobby",2));assertTrue(q.dispatch(next));}
+}
