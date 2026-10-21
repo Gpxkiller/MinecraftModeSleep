@@ -1,5 +1,13 @@
 # Changements
 
+## 0.1.1
+
+- Une déconnexion ou un événement tardif de l'ancienne session ne supprime plus l'attente de la nouvelle connexion du même joueur.
+- Les nouvelles arrivées renouvellent atomiquement l'unique demande de réveil, même si le fichier précédent est périmé.
+- Fermer un mode invalide ses anciennes demandes ; rouvrir annule une demande de veille encore en attente et réinitialise l'inactivité.
+- Un mode fermé redémarré extérieurement est de nouveau arrêté uniquement une fois vide, sous la garde habituelle.
+- Régressions : 200 sessions concurrentes avec reconnexions, 100 passages de worker, fermeture pendant démarrage et renouvellement des demandes. Préversion, aucun essai humain ni serveur de production revendiqué.
+
 ## 0.1.0
 
 - Extraction autonome du principe de veille/réveil : aucune dépendance GPX ni configuration de production.

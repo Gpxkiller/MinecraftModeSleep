@@ -2,7 +2,7 @@
 
 **Mise en veille et réveil automatique de serveurs Minecraft derrière Velocity.**
 
-Projet autonome de Gpxkiller, licence MIT. Préversion expérimentale **0.1.0**.
+Projet autonome de Gpxkiller, licence MIT. Préversion expérimentale **0.1.1**.
 Les exemples ne contiennent aucune configuration ni donnée d'un serveur réel.
 
 ## Ce que fait le projet
@@ -43,7 +43,7 @@ mvn -B package
 python3 -m unittest discover -s tests -p 'test_*.py'
 ```
 
-Le plugin est `target/minecraft-mode-sleep-0.1.0.jar`. Python n'a aucune dépendance externe.
+Le plugin est `target/minecraft-mode-sleep-0.1.1.jar`. Python n'a aucune dépendance externe.
 Les tests privilégiés sont désactivés par défaut et ne doivent être lancés que dans un **namespace réseau jetable**, jamais sur le pare-feu d'un serveur en service. Voir `VALIDATION.md`.
 
 ## Installer sur son propre hôte (manuel)

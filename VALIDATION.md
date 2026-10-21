@@ -1,4 +1,6 @@
-# Validation 0.1.0
+# Validation 0.1.1
+
+Audit 0.1.1 : trois défauts de cycle manuel reproduits par échecs de régression avant correction (ancienne demande après fermeture/réouverture, veille en attente non annulée par ouverture, démarrage externe d'un mode fermé). Les événements de connexion sont désormais filtrés par identité de session, et les demandes sont renouvelées par remplacement atomique plutôt que par modification d'un chemin existant. Tests locaux : 65 Python réussis, quatre ignorés Windows, 13 Java réussis, dont 200 tâches concurrentes avec anciennes sessions/callbacks et 100 renouvellements d'un fichier périmé. Ce sont des tests automatisés isolés, pas des joueurs humains. La CI Linux de la nouvelle version doit être verte avant publication.
 
 Préversion expérimentale. Aucun VPS ni serveur réel de l'auteur n'est modifié pour cette publication.
 

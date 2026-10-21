@@ -7,7 +7,7 @@ from __future__ import annotations
 import argparse, contextlib, json, math, os, re, socket, stat, struct, subprocess, sys, time, uuid
 from pathlib import Path
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 ID = re.compile(r'[a-z][a-z0-9-]{0,39}\Z')
 UNIT = re.compile(r'[a-zA-Z0-9][a-zA-Z0-9_.@-]{0,100}\.service\Z')
 BUSY = {'01', '02', '03', '04', '05', '08', '09', '0B', '0C'}
@@ -130,8 +130,11 @@ class Engine:
         data = self.load(); row = data.setdefault(mode, {'phase': 'unavailable', 'lastBusy': now})
         if action == 'close':
             row['closed'] = True
+            safe(self.root / 'inbox' / (mode + '.wake')).unlink(missing_ok=True)
         elif action == 'open':
             row['closed'] = False
+            row.pop('sleepRequested', None)
+            row['lastBusy'] = now
             if row['phase'] in ('closed', 'unavailable'):
                 row['phase'] = 'sleeping'
         elif action == 'sleep':
@@ -176,6 +179,8 @@ class Engine:
                 elif not number(row.get('startAt'), now - 180, now + 5) or state == 'failed':
                     row['phase'] = 'unavailable'; self.driver.audit('wake-unconfirmed', name)
                 continue
+            if row.get('closed') and state == 'active':
+                row['phase'] = 'running'
             if row['phase'] in ('sleeping', 'closed'):
                 if row.get('closed'):
                     row['phase'] = 'closed'; continue

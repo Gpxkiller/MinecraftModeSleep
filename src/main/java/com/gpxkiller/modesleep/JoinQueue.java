@@ -20,6 +20,7 @@ public final class JoinQueue {
  public Ticket dispatched(UUID id,String target){var t=dispatching.get(id);return t!=null&&t.target().equals(target)?t:null;}
  public void finished(Ticket t){dispatching.remove(t.id(),t);pending.remove(t.id(),t);}
  public void cancel(UUID id){pending.remove(id);}
+ public void cancel(UUID id,Object session){pending.computeIfPresent(id,(key,t)->t.session()==session?null:t);}
  public int size(){return pending.size();}
  public void clear(){pending.clear();dispatching.clear();}
 }

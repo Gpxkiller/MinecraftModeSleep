@@ -21,7 +21,7 @@ import java.nio.file.*;
 import java.time.Duration;
 import java.util.*;
 
-@Plugin(id="minecraftmodesleep",name="MinecraftModeSleep",version="0.1.0",authors={"Gpxkiller"},description="Safe single-host backend sleep and wake")
+@Plugin(id="minecraftmodesleep",name="MinecraftModeSleep",version="0.1.1",authors={"Gpxkiller"},description="Safe single-host backend sleep and wake")
 public final class ModeSleepPlugin {
  private final ProxyServer proxy;private final Logger log;private final Path folder;
  private final Gson gson=new Gson();private final JoinQueue queue=new JoinQueue();
@@ -60,7 +60,7 @@ public final class ModeSleepPlugin {
    return JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
   }catch(RuntimeException e){throw new IOException("Invalid IPC data");}
  }
- private void atomic(Path path,String text)throws IOException{
+ private static void atomic(Path path,String text)throws IOException{
   safe(path);Path temp=Files.createTempFile(path.getParent(),".proxy-",".tmp");
   try{Files.writeString(temp,text);Files.move(temp,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);}finally{Files.deleteIfExists(temp);}
  }
@@ -76,10 +76,9 @@ public final class ModeSleepPlugin {
   if(row==null||row.get("port").getAsInt()!=server.getServerInfo().getAddress().getPort())throw new IOException("Worker/proxy port mismatch");return row;
  }
  private void wake(String id)throws IOException{
-  Path request=safe(root.resolve("inbox/"+id+".wake"));
-  try{Files.writeString(request,"wake\n",StandardOpenOption.CREATE_NEW,StandardOpenOption.WRITE,LinkOption.NOFOLLOW_LINKS);}
-  catch(FileAlreadyExistsException ignored){/* One bounded request per configured mode. */}
+  requestWake(root.resolve("inbox/"+id+".wake"));
  }
+ static void requestWake(Path request)throws IOException{atomic(request,"wake\n");}
  @Subscribe public synchronized void beforeConnect(ServerPreConnectEvent event){
   if(!enabled)return;
   Player player=event.getPlayer();String mode=id(event.getOriginalServer());
@@ -104,10 +103,10 @@ public final class ModeSleepPlugin {
   if(event.getPlayer().getCurrentServer().isPresent())event.setResult(ServerPreConnectEvent.ServerResult.denied());
   else proxy.getServer(lobby).ifPresentOrElse(s->event.setResult(ServerPreConnectEvent.ServerResult.allowed(s)),()->event.setResult(ServerPreConnectEvent.ServerResult.denied()));
  }
- @Subscribe public void disconnected(DisconnectEvent event){queue.cancel(event.getPlayer().getUniqueId());}
+ @Subscribe public void disconnected(DisconnectEvent event){queue.cancel(event.getPlayer().getUniqueId(),event.getPlayer());}
  @Subscribe public void connected(ServerPostConnectEvent event){
   var player=event.getPlayer();String source=player.getCurrentServer().map(s->s.getServerInfo().getName()).orElse("");
-  for(var t:queue.snapshot())if(t.id().equals(player.getUniqueId())&&!queue.current(t,player,source,System.nanoTime()))queue.remove(t);
+  for(var t:queue.snapshot())if(t.id().equals(player.getUniqueId())&&t.session()==player&&!queue.current(t,player,source,System.nanoTime()))queue.remove(t);
  }
  private synchronized void tick(){
   if(!enabled)return;
