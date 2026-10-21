@@ -1,4 +1,5 @@
 import unittest
+import os, stat
 import test_engine as fixtures
 m=fixtures.m
 
@@ -9,6 +10,13 @@ class LifecycleAudit(unittest.TestCase):
  due=fixtures.PolicyTests.due
  wake=fixtures.PolicyTests.wake
  sleeping=fixtures.PolicyTests.sleeping
+ @unittest.skipUnless(os.name=='posix','POSIX file permissions required')
+ def test_service_umask_does_not_hide_public_state(self):
+  previous=os.umask(0o027)
+  try:self.engine.tick(self.now)
+  finally:os.umask(previous)
+  self.assertEqual(stat.S_IMODE(self.engine.public.stat().st_mode),0o644)
+  self.assertEqual(stat.S_IMODE(self.engine.ledger.stat().st_mode),0o600)
  def test_open_cancels_pending_sleep(self):
   self.engine.intent('sleep','survival',self.now)
   self.heartbeat(1);self.engine.tick(self.now)

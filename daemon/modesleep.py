@@ -35,6 +35,7 @@ def atomic(path, value, mode=0o600):
     try:
         fd = os.open(temp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, mode)
         with os.fdopen(fd, 'w', encoding='utf8') as handle:
+            if hasattr(os, 'fchmod'): os.fchmod(handle.fileno(), mode)
             json.dump(value, handle, allow_nan=False)
             handle.flush(); os.fsync(handle.fileno())
         os.replace(temp, path)
